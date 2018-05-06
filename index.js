@@ -21,7 +21,7 @@ var path = parsedUrl.pathname;
 var trimmedPath = path.replace(/^\/+|\/+$/g,'');
 
 //Get Query string as object
-var querySTringObject =parsedUrl.query;
+var queryStringObject =parsedUrl.query;
 
 //GEt The HTTP Method
 var method = req.method.toLowerCase();
@@ -39,11 +39,39 @@ req.on('data',function(data){
 req.on('end',function(){
     buffer += decoder.end();
 
-//Send The Response 
-res.end('Hello World!!!\n');
+//Choose handler request should go to
+var chosenHandler = typeof(router[trimmedPath]) !== undefined ? routers[trimmedPath] : handlers.notFound; 
 
+// Construct th data object to send to handler
+var data = {
+    'trimmedPath':trimmedPath,
+    'queryStringObject': queryStringObject,
+    'method': method,
+    'headers': headers,
+    'payload': buffer
+};
+
+// Route request to handler specified in router
+chosenHandler(data, function(statusCode,payload){
+    statusCode = typeof(statusCode) == 'number'? statusCode: 200;
+
+    payload = typeof(payload) == 'object'? payload : {};
+
+    // Convert the payload to a string
+    var payloadString = JSON.stringify(payload);
+
+    // Return the response
+    res.writeHead(statusCode);
+    res.end(payloadString);
+
+    console.log('Returning the Response: ', statusCode, payloadString);
+
+
+});
+
+
+//Send The Response 
 //Log the Request Path
-console.log('Request was recieved with these payload', buffer);
     });
 });
 
@@ -64,7 +92,7 @@ callback(406, {'name':'sample-handler'});
 
 //Not Found Handler
 handlers.notFound = function(data,callback){
-
+callback(404);
 };
 
 // Define a request Router
