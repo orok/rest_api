@@ -95,7 +95,7 @@ handlers.notFound = function(data,callback){
 callback(404);
 };
 
-// Define a request Router
+// Define a request Router here
 var router = {
     'sample': handlers.sample,
 };
